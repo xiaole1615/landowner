@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @ConfigurationProperties(prefix="lo.server")
-public class Constant { 
+public class Constant {
 
 	public static int SERVER_PORT;
 	
