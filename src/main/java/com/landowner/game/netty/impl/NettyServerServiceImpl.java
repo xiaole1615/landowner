@@ -37,7 +37,7 @@ public class NettyServerServiceImpl implements NettyServerService, DisposableBea
 	@Override
 	public void start() {
 		final int heartTime = Constant.HEART_TIME + 10;
-		ServerHandler handler = new ServerHandler();
+		ServerHandler handler = new ServerHandler(threadPool);
 		bossGroup = new NioEventLoopGroup();
 		workGroup = new NioEventLoopGroup();
 		try {
