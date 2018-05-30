@@ -4,7 +4,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConfigurationProperties(prefix="lo.server")
+@ConfigurationProperties(prefix="landowner.server")
 public class Constant {
 
 	public static int SERVER_PORT;

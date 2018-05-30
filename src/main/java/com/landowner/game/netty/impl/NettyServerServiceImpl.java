@@ -27,7 +27,7 @@ import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.handler.timeout.IdleStateHandler;
 
-@Service
+@Service("nettyServerService")
 public class NettyServerServiceImpl implements NettyServerService, DisposableBean {
 
     private ExecutorService threadPool = Executors.newFixedThreadPool(100);
@@ -64,16 +64,17 @@ public class NettyServerServiceImpl implements NettyServerService, DisposableBea
 				}
 				
 			});
-			
+
+			bootstrap.bind(Constant.SERVER_PORT);
 		} catch (Exception e) {
 		}
-		
+		System.out.println("---------------started---------------------");
 	}
 
 	@Override
 	public void close() {
-		Optional.ofNullable(bossGroup).map(thread -> thread.shutdownGracefully());
-		Optional.ofNullable(workGroup).map(thread -> thread.shutdownGracefully());
+		Optional.ofNullable(bossGroup).map(bossGroup -> bossGroup.shutdownGracefully());
+		Optional.ofNullable(workGroup).map(workGroup -> workGroup.shutdownGracefully());
 	}
 
 	@Override

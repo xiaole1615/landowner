@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
+import com.landowner.common.Constant;
 import com.landowner.listener.server.InitService;
 
 @Component
@@ -17,10 +18,14 @@ public class ServerListener implements ServletContextListener {
 
 	@Override
 	public void contextInitialized(ServletContextEvent event) {
+		System.out.println("=============================ServletContextListener");
+		welcome();
 		WebApplicationContext applicationContext = WebApplicationContextUtils.getWebApplicationContext(event.getServletContext());
+		//初始化配置参数
+		applicationContext.getBean(Constant.class);
+		//
 		initService = applicationContext.getBean(InitService.class);
 		initService.start();
-		welcome();
 		
 	}
 
