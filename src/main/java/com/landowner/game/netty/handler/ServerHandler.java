@@ -1,8 +1,11 @@
 package com.landowner.game.netty.handler;
 
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
+
+import com.landowner.common.model.Request;
+import com.landowner.game.netty.manager.HandshakerManager;
+import com.landowner.woker.invoke.Invoker;
+import com.landowner.woker.manager.InvokerManager;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -14,11 +17,14 @@ import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http.HttpVersion;
-import io.netty.handler.codec.http.QueryStringDecoder;
+import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
+import io.netty.handler.codec.http.websocketx.PingWebSocketFrame;
+import io.netty.handler.codec.http.websocketx.PongWebSocketFrame;
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
+import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
 import io.netty.util.CharsetUtil;
@@ -26,7 +32,6 @@ import io.netty.util.CharsetUtil;
 public class ServerHandler extends ChannelInboundHandlerAdapter {
 
 	private ExecutorService threadPool;
-    private WebSocketServerHandshaker handshaker;
 
 	public ServerHandler(ExecutorService threadPool) {
 		this.threadPool = threadPool;
@@ -56,6 +61,8 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 		threadPool.execute(() -> {
 			if(msg instanceof FullHttpRequest) {//握手
 				handHttpRequest(ctx, (FullHttpRequest)msg);
+			}else if(msg instanceof WebSocketFrame) {
+				disposeWebsocketFrame(ctx, (WebSocketFrame)msg);
 			}
 		});
 	}
@@ -66,6 +73,30 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 		super.userEventTriggered(ctx, evt);
 	}
 	
+	private void disposeWebsocketFrame(ChannelHandlerContext ctx, WebSocketFrame frame) {
+		//websocket关闭指令
+		if(frame instanceof CloseWebSocketFrame) {
+			HandshakerManager.close(ctx, frame);
+			return;
+		}
+		//判断是否是ping指令
+		if(frame instanceof PingWebSocketFrame) {
+			ctx.channel().writeAndFlush(new PongWebSocketFrame(frame.content().retain()));
+			return;
+		}
+		//判断是否是二进制消息
+		if(!(frame instanceof TextWebSocketFrame)) {
+			throw new RuntimeException("目前不支持二进制消息..");
+		}
+		String request = ((TextWebSocketFrame)frame).text();
+		Request parse = Request.parse(request);
+		short module = parse.getModule();
+		short command = parse.getCommand();
+		
+		Invoker invoker = InvokerManager.getInvoker(module, command);
+		invoker.invoke(parse.getData());
+	}
+	
 	private void handHttpRequest(ChannelHandlerContext ctx, FullHttpRequest req) {
 		System.out.println("要握手");
 		//非握手请求
@@ -73,7 +104,7 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
             sendHttpReponse(ctx, req, new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.BAD_REQUEST));
 		}
 		
-		HttpMethod method = req.method();
+		/*HttpMethod method = req.method();
         String uri = req.uri();
         QueryStringDecoder queryStringDecoder = new QueryStringDecoder(uri);
         Map<String, List<String>> parameters = queryStringDecoder.parameters();
@@ -91,11 +122,12 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
                 f.addListener(ChannelFutureListener.CLOSE);
                 return;
             }
-        }
+        }*/
         String webSocketURL = "ws://" + req.headers().get(HttpHeaderNames.HOST) + req.uri();
         WebSocketServerHandshakerFactory handshakerFactory = new WebSocketServerHandshakerFactory(webSocketURL, null, false);
-        handshaker = handshakerFactory.newHandshaker(req);
-        if(handshakerFactory == null){
+        WebSocketServerHandshaker handshaker = handshakerFactory.newHandshaker(req);
+        HandshakerManager.addHandshaker(ctx, handshaker);
+        if(handshaker == null){
             WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(ctx.channel());
         }else {
             handshaker.handshake(ctx.channel(), req);

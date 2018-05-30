@@ -1,11 +1,11 @@
-package com.landowner.common;
+package com.landowner.common.constant;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 @Component
 @ConfigurationProperties(prefix="landowner.server")
-public class Constant {
+public class SystemConstant {
 
 	public static int SERVER_PORT;
 	
@@ -13,10 +13,10 @@ public class Constant {
 
 
 	public void setServerPort(int serverPort) {
-		Constant.SERVER_PORT = serverPort;
+		SystemConstant.SERVER_PORT = serverPort;
 	}
 	public static void setHeartTime(int heartTime) {
-		Constant.HEART_TIME = heartTime;
+		SystemConstant.HEART_TIME = heartTime;
 	}
 	
 	

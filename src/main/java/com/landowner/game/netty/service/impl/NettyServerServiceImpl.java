@@ -1,4 +1,4 @@
-package com.landowner.game.netty.impl;
+package com.landowner.game.netty.service.impl;
 
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
@@ -8,9 +8,9 @@ import java.util.concurrent.TimeUnit;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.stereotype.Service;
 
-import com.landowner.common.Constant;
-import com.landowner.game.netty.NettyServerService;
+import com.landowner.common.constant.SystemConstant;
 import com.landowner.game.netty.handler.ServerHandler;
+import com.landowner.game.netty.service.NettyServerService;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelInitializer;
@@ -36,7 +36,7 @@ public class NettyServerServiceImpl implements NettyServerService, DisposableBea
 	
 	@Override
 	public void start() {
-		final int heartTime = Constant.HEART_TIME + 10;
+		final int heartTime = SystemConstant.HEART_TIME + 10;
 		ServerHandler handler = new ServerHandler(threadPool);
 		bossGroup = new NioEventLoopGroup();
 		workGroup = new NioEventLoopGroup();
@@ -65,7 +65,7 @@ public class NettyServerServiceImpl implements NettyServerService, DisposableBea
 				
 			});
 
-			bootstrap.bind(Constant.SERVER_PORT);
+			bootstrap.bind(SystemConstant.SERVER_PORT);
 		} catch (Exception e) {
 		}
 		System.out.println("---------------started---------------------");

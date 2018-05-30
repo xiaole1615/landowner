@@ -1,4 +1,4 @@
-package com.landowner.game.netty;
+package com.landowner.game.netty.service;
 
 public interface NettyServerService {
 

@@ -4,7 +4,7 @@ import javax.annotation.Resource;
 
 import org.springframework.stereotype.Service;
 
-import com.landowner.game.netty.NettyServerService;
+import com.landowner.game.netty.service.NettyServerService;
 import com.landowner.listener.server.InitService;
 
 @Service("initService")

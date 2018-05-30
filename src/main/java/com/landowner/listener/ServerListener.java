@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
-import com.landowner.common.Constant;
+import com.landowner.common.constant.SystemConstant;
 import com.landowner.listener.server.InitService;
 
 @Component
@@ -22,7 +22,7 @@ public class ServerListener implements ServletContextListener {
 		welcome();
 		WebApplicationContext applicationContext = WebApplicationContextUtils.getWebApplicationContext(event.getServletContext());
 		//初始化配置参数
-		applicationContext.getBean(Constant.class);
+		applicationContext.getBean(SystemConstant.class);
 		//
 		initService = applicationContext.getBean(InitService.class);
 		initService.start();
