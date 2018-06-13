@@ -2,10 +2,17 @@ package com.landowner.game.netty.handler;
 
 import java.util.concurrent.ExecutorService;
 
+import com.alibaba.fastjson.JSONObject;
+import com.landowner.common.constant.PackNum;
 import com.landowner.common.model.Request;
+import com.landowner.common.model.Response;
+import com.landowner.common.model.User;
 import com.landowner.game.netty.manager.HandshakerManager;
-import com.landowner.woker.invoke.Invoker;
-import com.landowner.woker.manager.InvokerManager;
+import com.landowner.game.netty.manager.SessionManager;
+import com.landowner.game.netty.model.Session;
+import com.landowner.game.woker.invoke.Invoker;
+import com.landowner.game.woker.manager.InvokerManager;
+import com.landowner.util.IdGenerator;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -29,6 +36,12 @@ import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
 import io.netty.util.CharsetUtil;
 
+/** 
+ * ClassName: ServerHandler <br/> 
+ * Description: nettHandler. <br/>
+ * Date: 2018年5月31日-上午10:36:49 <br/> 
+ * @author meter  <br/>
+ */
 public class ServerHandler extends ChannelInboundHandlerAdapter {
 
 	private ExecutorService threadPool;
@@ -52,7 +65,9 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
 		System.out.println("ServerHandler.channelInactive()");
-		super.channelInactive(ctx);
+		Session session = new Session(ctx.channel());
+		User user = (User) session.getAttachment();
+		SessionManager.removeSession(user.getUserId());
 	}
 
 	@Override
@@ -70,9 +85,15 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 	@Override
 	public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
 		System.out.println("ServerHandler.userEventTriggered()");
-		super.userEventTriggered(ctx, evt);
+		
 	}
 	
+	/** 
+	 * disposeWebsocketFrame:消息处理.  
+	 * @author meter
+	 * @param ctx
+	 * @param frame 
+	 */  
 	private void disposeWebsocketFrame(ChannelHandlerContext ctx, WebSocketFrame frame) {
 		//websocket关闭指令
 		if(frame instanceof CloseWebSocketFrame) {
@@ -97,6 +118,12 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 		invoker.invoke(parse.getData());
 	}
 	
+	/** 
+	 * handHttpRequest:webSocket请求握手.  
+	 * @author meter
+	 * @param ctx
+	 * @param req 
+	 */  
 	private void handHttpRequest(ChannelHandlerContext ctx, FullHttpRequest req) {
 		System.out.println("要握手");
 		//非握手请求
@@ -132,6 +159,19 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
         }else {
             handshaker.handshake(ctx.channel(), req);
         }
+        //添加session
+        String id = IdGenerator.getIdString();
+        Session session = new Session(ctx.channel());
+        User user = new User();
+        user.setUserId(id);
+        session.setAttachment(user);
+        SessionManager.addSession(id, session);
+        
+        //握手成功，响应信息
+        JSONObject jo = new JSONObject();
+        
+        jo.put("id", id);
+        new Response(PackNum.LOGIN, jo.toJSONString()).send(id);
 
 	}
 	private void sendHttpReponse(ChannelHandlerContext ctx,FullHttpRequest req,FullHttpResponse res) {

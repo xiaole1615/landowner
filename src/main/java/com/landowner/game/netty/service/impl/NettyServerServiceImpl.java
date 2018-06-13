@@ -3,7 +3,6 @@ package com.landowner.game.netty.service.impl;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.stereotype.Service;
@@ -34,10 +33,10 @@ public class NettyServerServiceImpl implements NettyServerService, DisposableBea
     private EventLoopGroup bossGroup;
     private EventLoopGroup workGroup;
 	
+    private ServerHandler handler;
 	@Override
 	public void start() {
-		final int heartTime = SystemConstant.HEART_TIME + 10;
-		ServerHandler handler = new ServerHandler(threadPool);
+		final int heartTime = SystemConstant.HEART_TIME;
 		bossGroup = new NioEventLoopGroup();
 		workGroup = new NioEventLoopGroup();
 		try {
@@ -50,9 +49,10 @@ public class NettyServerServiceImpl implements NettyServerService, DisposableBea
 
 				@Override
 				protected void initChannel(SocketChannel chnnel) throws Exception {
+					handler = new ServerHandler(threadPool);
 					ChannelPipeline pl = chnnel.pipeline();
 					//心跳
-					pl.addLast(new IdleStateHandler(heartTime, heartTime, heartTime, TimeUnit.SECONDS));
+					pl.addLast(new IdleStateHandler(heartTime, heartTime, heartTime));
 					//将请求和应答消息解码为http消息
                     pl.addLast(new HttpServerCodec());
                     //将http消息的多个部分合成一条完整的http消息

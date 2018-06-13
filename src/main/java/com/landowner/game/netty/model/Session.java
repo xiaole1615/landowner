@@ -1,5 +1,5 @@
   
-package com.landowner.game.netty.manager;
+package com.landowner.game.netty.model;
 
 import io.netty.channel.Channel;
 import io.netty.util.AttributeKey;
@@ -52,7 +52,7 @@ public class Session {
 	 * 向会话中写入消息
 	 * @param message
 	 */
-	public void write(Object message){
+	public void write(String message){
 		channel.writeAndFlush(message);
 	}
 	

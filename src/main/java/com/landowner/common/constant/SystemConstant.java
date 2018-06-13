@@ -15,7 +15,7 @@ public class SystemConstant {
 	public void setServerPort(int serverPort) {
 		SystemConstant.SERVER_PORT = serverPort;
 	}
-	public static void setHeartTime(int heartTime) {
+	public void setHeartTime(int heartTime) {
 		SystemConstant.HEART_TIME = heartTime;
 	}
 	
