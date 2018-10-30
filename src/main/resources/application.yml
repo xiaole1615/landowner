@@ -2,3 +2,5 @@ landowner:
  server: 
   serverPort: 9000
   heartTime: 5
+server:
+  port: 8888
